@@ -39,3 +39,8 @@ Thumbs.db
 .cache/
 .next/
 out/
+.vercel
+.env*.local
+
+
+.vercel

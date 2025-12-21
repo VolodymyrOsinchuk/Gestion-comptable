@@ -1,42 +1,47 @@
 import express from "express";
-import pool from "../config/db.js";
+import Task from "../models/Task.js";
 
 const router = express.Router();
 
-// GET toutes les tâches
+// ✅ GET toutes les tâches
 router.get("/", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM tasks ORDER BY id ASC");
-    res.json(result.rows);
+    const tasks = await Task.findAll({ order: [["id", "ASC"]] });
+    res.json(tasks);
   } catch (err) {
-    console.error(err.message);
+    console.error(err);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
-// POST nouvelle tâche
+// ✅ POST nouvelle tâche
 router.post("/", async (req, res) => {
   try {
     const { title, description } = req.body;
-    const result = await pool.query(
-      "INSERT INTO tasks (title, description) VALUES ($1, $2) RETURNING *",
-      [title, description]
-    );
-    res.json(result.rows[0]);
+
+    const task = await Task.create({ title, description });
+
+    res.json(task);
   } catch (err) {
-    console.error(err.message);
+    console.error(err);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
-// DELETE tâche
+// ✅ DELETE tâche
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    await pool.query("DELETE FROM tasks WHERE id = $1", [id]);
+
+    const deleted = await Task.destroy({ where: { id } });
+
+    if (!deleted) {
+      return res.status(404).json({ error: "Tâche introuvable" });
+    }
+
     res.json({ message: "Tâche supprimée" });
   } catch (err) {
-    console.error(err.message);
+    console.error(err);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
