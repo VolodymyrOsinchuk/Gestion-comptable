@@ -1,0 +1,11 @@
+{
+  "name": "gestion-comptable-pro",
+  "private": true,
+  "workspaces": ["server", "client"],
+  "engines": {
+    "node": "18.x"
+  },
+  "scripts": {
+    "build": "echo 'root build' && npm --workspaces run build || true"
+  }
+}
