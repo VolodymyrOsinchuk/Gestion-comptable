@@ -19,7 +19,8 @@ const Closing = lazy(() => import("./pages/Closing/Closing"));
 const Analysis = lazy(() => import("./pages/Analysis/Analysis"));
 const Operations = lazy(() => import("./pages/Operations/Operations"));
 const Companies = lazy(() => import("./pages/Companies/Companies"));
-
+const NotFound = lazy(() => import("./pages/Error/NotFound.jsx"));
+const ErrorPage = lazy(() => import("./pages/Error/ErrorPage.jsx"));
 // Loaders
 import { documentsLoader } from "./pages/Documents/documentsLoader.js";
 import { declarationsLoader } from "./pages/Declarations/declarationsLoader.js";
@@ -37,6 +38,7 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <MainLayout />,
+    errorElement: <ErrorPage />,
     children: [
       {
         index: true,
@@ -154,6 +156,10 @@ const router = createBrowserRouter([
         ),
         loader: compagniesLoader,
         action: companyAction,
+      },
+      {
+        path: "*",
+        element: <NotFound />,
       },
     ],
   },
