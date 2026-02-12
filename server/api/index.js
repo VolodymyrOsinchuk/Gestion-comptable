@@ -5,6 +5,9 @@ import morgan from "morgan";
 import sequelize from "../config/db.js";
 import seedDatabase from "../seedData.js";
 
+// Ensure models are loaded and associations initialized
+import "../models/index.js";
+
 // import documentRoutes from "./routes/documentRoutes";
 // import bankRoutes from "./routes/bankRoutes";
 // import declarationRoutes from "./routes/declarationRoutes";

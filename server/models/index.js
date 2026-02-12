@@ -32,6 +32,26 @@ Document.hasOne(BankTransaction, {
   as: "bankTransaction",
 });
 
+// Document <-> ThirdParty association
+Document.belongsTo(ThirdParty, {
+  foreignKey: "third_party_id",
+  as: "thirdParty",
+});
+ThirdParty.hasMany(Document, {
+  foreignKey: "third_party_id",
+  as: "documents",
+});
+
+// AccountingEntry associations for reconciliation
+AccountingEntry.belongsTo(ThirdParty, {
+  foreignKey: "third_party_id",
+  as: "thirdParty",
+});
+ThirdParty.hasMany(AccountingEntry, {
+  foreignKey: "third_party_id",
+  as: "accountingEntries",
+});
+
 TVAReport.hasMany(TVAItem, { foreignKey: "tva_report_id", as: "items" });
 TVAItem.belongsTo(TVAReport, { foreignKey: "tva_report_id", as: "report" });
 

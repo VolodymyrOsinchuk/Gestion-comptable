@@ -6,6 +6,7 @@ import {
   updateDocument,
   deleteDocument,
   updateDocumentStatus,
+  generateEntriesForAccountedDocuments,
 } from "../controllers/documentController.js";
 
 const router = Router();
@@ -25,5 +26,8 @@ router
 
 // Route spéciale pour mettre à jour le statut
 router.patch("/documents/:id/status", updateDocumentStatus);
+
+// Endpoint to retro-generate accounting entries for already accounted documents
+router.post("/generate-entries", generateEntriesForAccountedDocuments);
 
 export default router;

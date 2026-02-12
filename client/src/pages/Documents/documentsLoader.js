@@ -7,7 +7,7 @@ export const documentsLoader = async ({ params }) => {
     const { companyId } = params;
     const { data } = await customFetch.get(`/companies/${companyId}/documents`);
     console.log("🚀 ~ documentsLoader ~  data :", data);
-    return data.data || [];
+    return data || [];
   } catch (error) {
     console.error("Documents loader error:", error);
     toast.error(error?.response?.data?.message || "Erreur lors du chargement");

@@ -128,6 +128,23 @@ const Document = sequelize.define(
   },
   {
     tableName: "documents",
+    timestamps: true,
+    validate: {
+      amountsMatch() {
+        const ht = Number(this.amount_ht || 0);
+        const tva = Number(this.amount_tva || 0);
+        const ttc = Number(this.amount_ttc || 0);
+        if (Number.isNaN(ht) || Number.isNaN(tva) || Number.isNaN(ttc)) {
+          throw new Error("Montants invalides");
+        }
+        // Allow small rounding difference up to 0.02
+        if (Math.abs(ht + tva - ttc) > 0.02) {
+          throw new Error(
+            "Montants HT + TVA doivent être égaux au TTC (arrondi autorisé)"
+          );
+        }
+      },
+    },
     indexes: [
       { fields: ["company_id", "reference"], unique: true },
       { fields: ["status"] },
