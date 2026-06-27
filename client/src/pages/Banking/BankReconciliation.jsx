@@ -1,10 +1,15 @@
-import { mockData } from "../../data/mockData";
+import { useLoaderData } from "react-router-dom";
 import Card from "../../components/ui/Card";
 import StatCard from "../../components/ui/StatCard";
 import Badge from "../../components/ui/Badge";
 
 export default function BankReconciliation() {
-  const transactions = mockData.bankTransactions;
+  const { transactions } = useLoaderData();
+
+  const reconciled = transactions.filter((t) => t.status === "reconciled");
+  const pending = transactions.filter((t) => t.status === "pending" || t.status === "imported");
+  const debitTotal = transactions.reduce((s, t) => s + Number(t.debit || 0), 0);
+  const creditTotal = transactions.reduce((s, t) => s + Number(t.credit || 0), 0);
 
   return (
     <>
@@ -45,9 +50,10 @@ export default function BankReconciliation() {
 
       <Card title="État de Rapprochement">
         <div className="stats-grid">
-          <StatCard label="Solde Comptable" value="25,430.50 €" />
-          <StatCard label="Solde Bancaire" value="25,680.50 €" />
-          <StatCard label="Écart" value="-250.00 €" variant="error" />
+          <StatCard label="Transactions" value={String(transactions.length)} />
+          <StatCard label="Rapprochées" value={String(reconciled.length)} />
+          <StatCard label="En attente" value={String(pending.length)} variant="warning" />
+          <StatCard label="Écart" value={`${(debitTotal - creditTotal).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €`} variant={Math.abs(debitTotal - creditTotal) > 0.01 ? "error" : "success"} />
         </div>
       </Card>
 
@@ -71,8 +77,8 @@ export default function BankReconciliation() {
                   <td>{tr.date}</td>
                   <td>{tr.label}</td>
                   <td>{tr.reference}</td>
-                  <td>{tr.debit > 0 ? `${tr.debit.toFixed(2)} €` : "-"}</td>
-                  <td>{tr.credit > 0 ? `${tr.credit.toFixed(2)} €` : "-"}</td>
+                  <td>{Number(tr.debit) > 0 ? `${Number(tr.debit).toFixed(2)} €` : "-"}</td>
+                  <td>{Number(tr.credit) > 0 ? `${Number(tr.credit).toFixed(2)} €` : "-"}</td>
                   <td>
                     <Badge
                       variant={

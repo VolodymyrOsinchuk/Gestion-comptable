@@ -18,6 +18,8 @@ const Accounting = lazy(() => import("./pages/Accounting/Accounting"));
 const PlanComptable = lazy(() => import("./pages/Accounting/PlanComptable"));
 const Closing = lazy(() => import("./pages/Closing/Closing"));
 const Analysis = lazy(() => import("./pages/Analysis/Analysis"));
+const Balance = lazy(() => import("./pages/Analysis/Balance"));
+const GrandLivre = lazy(() => import("./pages/Analysis/GrandLivre"));
 const Operations = lazy(() => import("./pages/Operations/Operations"));
 const Companies = lazy(() => import("./pages/Companies/Companies"));
 const NotFound = lazy(() => import("./pages/Error/NotFound.jsx"));
@@ -28,6 +30,7 @@ import { declarationsLoader } from "./pages/Declarations/declarationsLoader.js";
 import { payrollLoader } from "./pages/Payroll/payrollLoader.js";
 import { companiesLoader } from "./pages/Companies/companiesLoader.js";
 import { tvaLoader } from "./pages/TVA/tvaLoader.js";
+import { bankingLoader } from "./pages/Banking/bankingLoader.js";
 
 // Actions
 import { companyAction } from "./pages/Companies/companyAction";
@@ -100,6 +103,7 @@ const router = createBrowserRouter([
                 <BankReconciliation />
               </SuspenseWrapper>
             ),
+            loader: bankingLoader,
           },
           {
             path: "scanner",
@@ -181,6 +185,22 @@ const router = createBrowserRouter([
             element: (
               <SuspenseWrapper>
                 <Analysis />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: "balance",
+            element: (
+              <SuspenseWrapper>
+                <Balance />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: "grand-livre",
+            element: (
+              <SuspenseWrapper>
+                <GrandLivre />
               </SuspenseWrapper>
             ),
           },

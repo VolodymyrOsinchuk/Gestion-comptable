@@ -1,4 +1,5 @@
 import { Router } from "express";
+import multer from "multer";
 import {
   getAllDocuments,
   getDocument,
@@ -7,27 +8,26 @@ import {
   deleteDocument,
   updateDocumentStatus,
   generateEntriesForAccountedDocuments,
+  scanDocument,
 } from "../controllers/documentController.js";
+import { validate, documentSchema } from "../middleware/validate.js";
 
 const router = Router();
+const upload = multer({ dest: "uploads/" });
 
-// Routes pour les documents d'une entreprise
-router
-  .route("/companies/:companyId/documents")
-  .get(getAllDocuments)
-  .post(createDocument);
+router.get("/company/:companyId", getAllDocuments);
+router.post("/company/:companyId", validate(documentSchema), createDocument);
 
-// Routes pour un document spécifique
+// Upload & scan endpoint (multipart)
+router.post("/scan", upload.single("file"), scanDocument);
+
 router
-  .route("/documents/:id")
+  .route("/:id")
   .get(getDocument)
   .patch(updateDocument)
   .delete(deleteDocument);
 
-// Route spéciale pour mettre à jour le statut
-router.patch("/documents/:id/status", updateDocumentStatus);
-
-// Endpoint to retro-generate accounting entries for already accounted documents
+router.patch("/:id/status", updateDocumentStatus);
 router.post("/generate-entries", generateEntriesForAccountedDocuments);
 
 export default router;

@@ -1,14 +1,12 @@
+import customFetch from "../../utils/customFetch.js";
+
 export const tvaLoader = async ({ params }) => {
   const { companyId } = params;
   if (!companyId) return { declarations: [], status: null };
   try {
     const [statusRes, declsRes] = await Promise.all([
-      import("../../utils/customFetch.js").then((m) =>
-        m.default.get(`/tva/companies/${companyId}/status`)
-      ),
-      import("../../utils/customFetch.js").then((m) =>
-        m.default.get(`/tva/companies/${companyId}/declarations`)
-      ),
+      customFetch.get(`/tva/companies/${companyId}/status`),
+      customFetch.get(`/tva/companies/${companyId}/declarations`),
     ]);
     return {
       status: statusRes.data,

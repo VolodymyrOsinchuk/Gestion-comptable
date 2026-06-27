@@ -67,6 +67,7 @@ const Declaration = sequelize.define(
     tableName: "declarations",
     indexes: [
       { fields: ["company_id"] },
+      { fields: ["company_id", "type", "period_start"], unique: true },
       { fields: ["type"] },
       { fields: ["deadline"] },
       { fields: ["status"] },

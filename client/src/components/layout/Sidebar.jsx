@@ -16,6 +16,8 @@ const menuItems = [
   { path: "plan-comptable", icon: "📒", label: "Plan Comptable" },
   { path: "closing", icon: "⚖️", label: "Clôture & Bilan" },
   { path: "analysis", icon: "📊", label: "Analyse Financière" },
+  { path: "balance", icon: "⚖️", label: "État de Solde" },
+  { path: "grand-livre", icon: "📓", label: "Grand Livre" },
   { path: "operations", icon: "🎯", label: "Centre Opérations" },
 ];
 

@@ -31,10 +31,25 @@ export const getStatus = async (req, res) => {
 export const listDeclarations = async (req, res) => {
   try {
     const { companyId } = req.params;
-    const declarations = await TvaDeclaration.findAll({
+    const reports = await TvaDeclaration.findAll({
       where: { company_id: companyId },
       include: [{ model: TvaDeclarationLine, as: "lines" }],
       order: [["period_start", "DESC"]],
+    });
+    const declarations = reports.map((r) => {
+      const d = r.get({ plain: true });
+      return {
+        id: d.id,
+        type: "tva",
+        period: d.period_label,
+        period_start: d.period_start,
+        period_end: d.period_end,
+        deadline: d.period_end,
+        amount: Number(d.net_due || 0) - Number(d.credit_tva || 0),
+        status: d.status === "locked" ? "submitted" : d.status === "computed" ? "prepared" : d.status,
+        created_at: d.created_at,
+        updated_at: d.updated_at,
+      };
     });
     res.status(StatusCodes.OK).json({ declarations });
   } catch (error) {

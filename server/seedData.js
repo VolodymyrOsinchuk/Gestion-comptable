@@ -1303,11 +1303,14 @@ async function seedTVAReports(companies) {
       },
     ];
 
-    for (const item of tvaItems) {
-      await TVAItem.create(item);
+    if (tvaNew) {
+      for (const item of tvaItems) {
+        await TVAItem.create(item);
+      }
+      console.log(`  ✓ Rapport TVA créé pour ${company.name}`);
+    } else {
+      console.log(`  ⏭️  Rapport TVA existe déjà pour ${company.name}`);
     }
-
-    console.log(tvaNew ? `  ✓ Rapport TVA créé pour ${company.name}` : `  ⏭️  Rapport TVA existe déjà pour ${company.name}`);
   }
 }
 

@@ -28,10 +28,16 @@ export default function Accounting() {
     creditAmount: "",
     label: "",
     tvaRate: "",
+    lettrage: "",
+    isLettrage: false,
   });
 
   const tvaSide = useMemo(() => {
-    if (form.creditAccount?.tva_applicable && form.creditAccount?.account_number?.charAt(0) === "7") return "credit";
+    if (
+      form.creditAccount?.tva_applicable &&
+      form.creditAccount?.account_number?.charAt(0) === "7"
+    )
+      return "credit";
     if (form.debitAccount?.tva_applicable) return "debit";
     return null;
   }, [form.debitAccount, form.creditAccount]);
@@ -46,9 +52,13 @@ export default function Accounting() {
   const ttcAmount = useMemo(() => {
     if (tvaAppliedAmount <= 0) return 0;
     if (tvaSide === "debit") {
-      return Math.round((Number(form.debitAmount) + tvaAppliedAmount) * 100) / 100;
+      return (
+        Math.round((Number(form.debitAmount) + tvaAppliedAmount) * 100) / 100
+      );
     }
-    return Math.round((Number(form.creditAmount) + tvaAppliedAmount) * 100) / 100;
+    return (
+      Math.round((Number(form.creditAmount) + tvaAppliedAmount) * 100) / 100
+    );
   }, [tvaAppliedAmount, tvaSide, form.debitAmount, form.creditAmount]);
 
   const getTvaAccount = useCallback(() => {
@@ -57,24 +67,28 @@ export default function Accounting() {
     let search = "";
     if (prefix === "6") search = "445660";
     else if (prefix === "2") search = "445670";
-    else if (form.creditAccount?.account_number?.charAt(0) === "7") search = "445710";
+    else if (form.creditAccount?.account_number?.charAt(0) === "7")
+      search = "445710";
     else search = "445660";
     return accounts.find((a) => a.account_number === search) || null;
   }, [form.tvaRate, form.debitAccount, form.creditAccount, accounts]);
 
-  const showTva = form.debitAccount?.tva_applicable || form.creditAccount?.tva_applicable;
+  const showTva =
+    form.debitAccount?.tva_applicable || form.creditAccount?.tva_applicable;
 
   useEffect(() => {
     if (!companyId) return;
     Promise.all([
-      fetch(`${API}/chart-of-accounts/${companyId}?autocomplete=true&active=true`).then((r) =>
-        r.json()
-      ),
+      fetch(
+        `${API}/chart-of-accounts/${companyId}?autocomplete=true&active=true`,
+      ).then((r) => r.json()),
       fetch(`${API}/journals/${companyId}`).then((r) => r.json()),
     ])
       .then(([accountsData, journalsData]) => {
         setAccounts(accountsData.accounts || accountsData.rows || []);
-        setJournals(journalsData.journals || journalsData.rows || journalsData || []);
+        setJournals(
+          journalsData.journals || journalsData.rows || journalsData || [],
+        );
       })
       .catch(() => toast.error("Erreur chargement des données"));
   }, [companyId]);
@@ -89,10 +103,16 @@ export default function Accounting() {
       toast.error("Saisissez les montants");
       return;
     }
-    const totalDebit = Number(form.debitAmount) + (tvaSide === "debit" && tvaAppliedAmount > 0 ? tvaAppliedAmount : 0);
-    const totalCredit = Number(form.creditAmount) + (tvaSide === "credit" && tvaAppliedAmount > 0 ? tvaAppliedAmount : 0);
+    const totalDebit =
+      Number(form.debitAmount) +
+      (tvaSide === "debit" && tvaAppliedAmount > 0 ? tvaAppliedAmount : 0);
+    const totalCredit =
+      Number(form.creditAmount) +
+      (tvaSide === "credit" && tvaAppliedAmount > 0 ? tvaAppliedAmount : 0);
     if (Math.abs(totalDebit - totalCredit) > 0.01) {
-      toast.error(`Écriture non équilibrée : débit ${totalDebit.toFixed(2)} ≠ crédit ${totalCredit.toFixed(2)}`);
+      toast.error(
+        `Écriture non équilibrée : débit ${totalDebit.toFixed(2)} ≠ crédit ${totalCredit.toFixed(2)}`,
+      );
       return;
     }
     if (!form.journalId) {
@@ -104,16 +124,23 @@ export default function Accounting() {
       return;
     }
 
+    const lettrageCode = form.lettrage.trim() || null;
+    const isLettrage = Boolean(form.isLettrage);
+
     const lines = [
       {
         account_number: form.debitAccount.account_number,
         debit: Number(form.debitAmount),
         credit: 0,
+        lettrage: lettrageCode,
+        is_lettred: isLettrage,
       },
       {
         account_number: form.creditAccount.account_number,
         debit: 0,
         credit: Number(form.creditAmount),
+        lettrage: lettrageCode,
+        is_lettred: isLettrage,
       },
     ];
 
@@ -143,7 +170,10 @@ export default function Accounting() {
         throw new Error(err.error || "Erreur lors de la création");
       }
       const result = await res.json();
-      const tvaMsg = tvaAppliedAmount > 0 ? ` (TVA ${form.tvaRate}% : ${tvaAppliedAmount.toFixed(2)}€)` : "";
+      const tvaMsg =
+        tvaAppliedAmount > 0
+          ? ` (TVA ${form.tvaRate}% : ${tvaAppliedAmount.toFixed(2)}€)`
+          : "";
       toast.success(`Écriture ${result.entry_number} enregistrée${tvaMsg}`);
       setForm({
         entryDate: new Date().toISOString().slice(0, 10),
@@ -154,6 +184,8 @@ export default function Accounting() {
         creditAmount: "",
         label: "",
         tvaRate: "",
+        lettrage: "",
+        isLettrage: false,
       });
       setEntryKey((k) => k + 1);
     } catch (err) {
@@ -205,7 +237,9 @@ export default function Accounting() {
                 type="date"
                 id="entryDate"
                 value={form.entryDate}
-                onChange={(e) => setForm({ ...form, entryDate: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, entryDate: e.target.value })
+                }
               />
             </div>
 
@@ -214,7 +248,9 @@ export default function Accounting() {
               <select
                 id="entryJournal"
                 value={form.journalId}
-                onChange={(e) => setForm({ ...form, journalId: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, journalId: e.target.value })
+                }
               >
                 <option value="">Sélectionner...</option>
                 {journals.map((j) => (
@@ -224,13 +260,30 @@ export default function Accounting() {
                 ))}
               </select>
             </div>
-          </div>
-
-          <div className="entry-lines">
-            <div className="entry-line-header">
-              <span className="el-cell el-cell-wide">Compte</span>
-              <span className="el-cell el-cell-amount">Débit (€)</span>
-              <span className="el-cell el-cell-amount">Crédit (€)</span>
+            <div className="form-group">
+              <label htmlFor="lettrage">Lettrage</label>
+              <input
+                type="text"
+                id="lettrage"
+                placeholder="Ex: A, B, AA"
+                value={form.lettrage}
+                onChange={(e) => setForm({ ...form, lettrage: e.target.value })}
+              />
+            </div>
+            <div
+              className="form-group checkbox-group"
+              style={{ alignItems: "center" }}
+            >
+              <label>
+                <input
+                  type="checkbox"
+                  checked={form.isLettrage}
+                  onChange={(e) =>
+                    setForm({ ...form, isLettrage: e.target.checked })
+                  }
+                />
+                Écriture lettrée
+              </label>
             </div>
 
             <div className="entry-line">
@@ -250,11 +303,19 @@ export default function Accounting() {
                   type="number"
                   step="0.01"
                   min="0"
-                  value={tvaSide === "credit" && form.tvaRate ? ttcAmount.toFixed(2) : form.debitAmount}
-                  onChange={(e) => setForm({ ...form, debitAmount: e.target.value })}
+                  value={
+                    tvaSide === "credit" && form.tvaRate
+                      ? ttcAmount.toFixed(2)
+                      : form.debitAmount
+                  }
+                  onChange={(e) =>
+                    setForm({ ...form, debitAmount: e.target.value })
+                  }
                   placeholder="0.00"
                   readOnly={tvaSide === "credit" && !!form.tvaRate}
-                  className={tvaSide === "credit" && form.tvaRate ? "input-readonly" : ""}
+                  className={
+                    tvaSide === "credit" && form.tvaRate ? "input-readonly" : ""
+                  }
                 />
               </div>
               <div className="el-cell el-cell-amount el-cell-muted">—</div>
@@ -278,11 +339,19 @@ export default function Accounting() {
                   type="number"
                   step="0.01"
                   min="0"
-                  value={tvaSide === "debit" && form.tvaRate ? ttcAmount.toFixed(2) : form.creditAmount}
-                  onChange={(e) => setForm({ ...form, creditAmount: e.target.value })}
+                  value={
+                    tvaSide === "debit" && form.tvaRate
+                      ? ttcAmount.toFixed(2)
+                      : form.creditAmount
+                  }
+                  onChange={(e) =>
+                    setForm({ ...form, creditAmount: e.target.value })
+                  }
                   placeholder="0.00"
                   readOnly={tvaSide === "debit" && !!form.tvaRate}
-                  className={tvaSide === "debit" && form.tvaRate ? "input-readonly" : ""}
+                  className={
+                    tvaSide === "debit" && form.tvaRate ? "input-readonly" : ""
+                  }
                 />
               </div>
             </div>
@@ -295,7 +364,9 @@ export default function Accounting() {
                   <label>TVA</label>
                   <select
                     value={form.tvaRate}
-                    onChange={(e) => setForm({ ...form, tvaRate: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, tvaRate: e.target.value })
+                    }
                   >
                     <option value="">Sans TVA</option>
                     <option value="2.1">2,1 %</option>
@@ -308,26 +379,44 @@ export default function Accounting() {
                   <>
                     <div className="form-group tva-amount-group">
                       <label>Montant TVA</label>
-                      <input type="number" value={tvaAppliedAmount.toFixed(2)} readOnly className="input-readonly" />
+                      <input
+                        type="number"
+                        value={tvaAppliedAmount.toFixed(2)}
+                        readOnly
+                        className="input-readonly"
+                      />
                     </div>
                     <div className="form-group tva-account-group">
                       <label>Compte TVA</label>
                       <input
                         type="text"
-                        value={getTvaAccount() ? `${getTvaAccount().account_number} - ${getTvaAccount().account_label}` : ""}
+                        value={
+                          getTvaAccount()
+                            ? `${getTvaAccount().account_number} - ${getTvaAccount().account_label}`
+                            : ""
+                        }
                         readOnly
                         className="input-readonly"
                       />
                     </div>
                     <div className="form-group tva-ttc-group">
                       <label>Base TTC</label>
-                      <input type="number" value={ttcAmount.toFixed(2)} readOnly className="input-readonly ttc-amount" />
+                      <input
+                        type="number"
+                        value={ttcAmount.toFixed(2)}
+                        readOnly
+                        className="input-readonly ttc-amount"
+                      />
                     </div>
                     <div className="form-group tva-side-group">
                       <label>Sens TVA</label>
                       <input
                         type="text"
-                        value={tvaSide === "debit" ? "TVA en débit (achat)" : "TVA en crédit (vente)"}
+                        value={
+                          tvaSide === "debit"
+                            ? "TVA en débit (achat)"
+                            : "TVA en crédit (vente)"
+                        }
                         readOnly
                         className="input-readonly"
                       />
@@ -378,15 +467,19 @@ export default function Accounting() {
                 <tr key={account.account_number}>
                   <td className="td-mono">{account.account_number}</td>
                   <td>{account.account_label}</td>
-                  <td>{classes[account.account_class] || `Classe ${account.account_class}`}</td>
+                  <td>
+                    {classes[account.account_class] ||
+                      `Classe ${account.account_class}`}
+                  </td>
                   <td>
                     <Badge
                       variant={
-                        account.account_type === "revenue" || account.account_type === "asset"
+                        account.account_type === "revenue" ||
+                        account.account_type === "asset"
                           ? "success"
                           : account.account_type === "liability"
-                          ? "warning"
-                          : "info"
+                            ? "warning"
+                            : "info"
                       }
                     >
                       {getTypeLabel(account.account_type)}

@@ -3,9 +3,11 @@ import { executeClosure, getClosureStatus, getBalanceSheet } from "../services/c
 
 export const closeFiscalYear = async (req, res) => {
   try {
-    const { companyId } = req.params;
-    const { year } = req.body;
+    const { companyId, year } = req.body;
 
+    if (!companyId) {
+      return res.status(StatusCodes.BAD_REQUEST).json({ msg: "companyId est requis." });
+    }
     if (!year) {
       return res.status(StatusCodes.BAD_REQUEST).json({ msg: "L'année est requise." });
     }

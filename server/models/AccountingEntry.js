@@ -117,12 +117,13 @@ const AccountingEntry = sequelize.define(
     timestamps: true,
     hooks: {
       beforeUpdate: (entry, options) => {
-        if (entry.previous("is_validated") === true) {
+        if (entry.previous && entry.previous("is_validated") === true) {
           throw new Error("Impossible de modifier une écriture validée. Utilisez une contrepassation.");
         }
       },
       beforeDestroy: (entry, options) => {
-        if (entry.is_validated === true) {
+        const wasValidated = entry.previous ? entry.previous("is_validated") : entry.is_validated;
+        if (wasValidated === true) {
           throw new Error("Impossible de supprimer une écriture validée. Utilisez une contrepassation.");
         }
       },

@@ -26,7 +26,7 @@ export const documentsAction = async ({ request, params }) => {
         };
 
         await customFetch.post(
-          `/companies/${companyId}/documents`,
+          `/documents/company/${companyId}`,
           documentData
         );
         toast.success("Document créé avec succès");

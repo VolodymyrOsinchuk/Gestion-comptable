@@ -3,10 +3,9 @@ import customFetch from "../../utils/customFetch.js";
 
 export const declarationsLoader = async ({ params }) => {
   try {
-    const resp = await customFetch.get(`/companies/${params.companyId}/documents`);
-    return resp.data;
+    const resp = await customFetch.get(`/tva/companies/${params.companyId}/declarations`);
+    return { declarations: resp.data.declarations || [] };
   } catch (error) {
-    toast.error(error?.response?.data?.msg);
-    return error;
+    return { declarations: [] };
   }
 };

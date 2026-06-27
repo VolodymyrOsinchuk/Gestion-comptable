@@ -40,6 +40,7 @@ const TvaDeclaration = sequelize.define(
     timestamps: true,
     indexes: [
       { fields: ["company_id"] },
+      { fields: ["company_id", "period_label"], unique: true },
       { fields: ["period_start", "period_end"] },
       { fields: ["status"] },
     ],

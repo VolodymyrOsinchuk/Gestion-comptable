@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { useLoaderData, Form, useNavigation, useActionData, useParams } from "react-router-dom";
+import {
+  useLoaderData,
+  Form,
+  useNavigation,
+  useActionData,
+  useParams,
+} from "react-router-dom";
 import Card from "../../components/ui/Card";
 import Badge from "../../components/ui/Badge";
 
@@ -8,19 +14,46 @@ function Modal({ isOpen, onClose, title, children }) {
   return (
     <div
       style={{
-        position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
-        display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.5)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 1000,
       }}
     >
       <div
         style={{
-          background: "#fff", borderRadius: "8px", padding: "2rem",
-          maxWidth: "600px", width: "90%", maxHeight: "90vh", overflow: "auto",
+          background: "#fff",
+          borderRadius: "8px",
+          padding: "2rem",
+          maxWidth: "600px",
+          width: "90%",
+          maxHeight: "90vh",
+          overflow: "auto",
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "1.5rem",
+          }}
+        >
           <h2 style={{ fontSize: "1.5rem", fontWeight: 600 }}>{title}</h2>
-          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: "1.5rem", cursor: "pointer" }}>✕</button>
+          <button
+            onClick={onClose}
+            style={{
+              background: "none",
+              border: "none",
+              fontSize: "1.5rem",
+              cursor: "pointer",
+            }}
+          >
+            ✕
+          </button>
         </div>
         {children}
       </div>
@@ -49,7 +82,11 @@ const TYPE_LABELS = {
 };
 
 export default function Documents() {
-  const { documents = [], accountingEntries = [], count = 0 } = useLoaderData() || {};
+  const {
+    documents = [],
+    accountingEntries = [],
+    count = 0,
+  } = useLoaderData() || {};
   const actionData = useActionData();
   const navigation = useNavigation();
   const { companyId } = useParams();
@@ -94,29 +131,73 @@ export default function Documents() {
 
   return (
     <>
-      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div
+        className="page-header"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <h1 className="page-title">Documents & Écritures</h1>
-        <button className="btn btn-primary" onClick={() => { setEditId(null); setShowCreate(true); }}>
+        <button
+          className="btn btn-primary"
+          onClick={() => {
+            setEditId(null);
+            setShowCreate(true);
+          }}
+        >
           + Nouveau document
         </button>
       </div>
 
-      <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
+      <div
+        className="stats-grid"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+          gap: "1rem",
+          marginBottom: "1.5rem",
+        }}
+      >
         <Card>
-          <div style={{ fontSize: "0.875rem", color: "#666" }}>Total documents</div>
-          <div style={{ fontSize: "1.75rem", fontWeight: 700 }}>{stats.total}</div>
+          <div style={{ fontSize: "0.875rem", color: "#666" }}>
+            Total documents
+          </div>
+          <div style={{ fontSize: "1.75rem", fontWeight: 700 }}>
+            {stats.total}
+          </div>
         </Card>
         <Card>
           <div style={{ fontSize: "0.875rem", color: "#666" }}>Validés</div>
-          <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "var(--success, #16a34a)" }}>{stats.validated}</div>
+          <div
+            style={{
+              fontSize: "1.75rem",
+              fontWeight: 700,
+              color: "var(--success, #16a34a)",
+            }}
+          >
+            {stats.validated}
+          </div>
         </Card>
         <Card>
           <div style={{ fontSize: "0.875rem", color: "#666" }}>En attente</div>
-          <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "var(--warning, #d97706)" }}>{stats.pending}</div>
+          <div
+            style={{
+              fontSize: "1.75rem",
+              fontWeight: 700,
+              color: "var(--warning, #d97706)",
+            }}
+          >
+            {stats.pending}
+          </div>
         </Card>
         <Card>
           <div style={{ fontSize: "0.875rem", color: "#666" }}>Montant TTC</div>
-          <div style={{ fontSize: "1.75rem", fontWeight: 700 }}>{stats.amount.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €</div>
+          <div style={{ fontSize: "1.75rem", fontWeight: 700 }}>
+            {stats.amount.toLocaleString("fr-FR", { minimumFractionDigits: 2 })}{" "}
+            €
+          </div>
         </Card>
       </div>
 
@@ -139,36 +220,113 @@ export default function Documents() {
             <tbody>
               {documents.length === 0 ? (
                 <tr>
-                  <td colSpan={9} style={{ textAlign: "center", padding: "2rem", color: "#999" }}>
-                    Aucun document. Créez-en un avec le bouton "+ Nouveau document".
+                  <td
+                    colSpan={9}
+                    style={{
+                      textAlign: "center",
+                      padding: "2rem",
+                      color: "#999",
+                    }}
+                  >
+                    Aucun document. Créez-en un avec le bouton "+ Nouveau
+                    document".
                   </td>
                 </tr>
               ) : (
                 documents.map((doc) => (
                   <tr key={doc.id}>
-                    <td style={{ fontWeight: 600 }}>{doc.reference || `DOC-${doc.id}`}</td>
-                    <td>{doc.date ? new Date(doc.date).toLocaleDateString("fr-FR") : "—"}</td>
-                    <td><Badge variant="secondary">{TYPE_LABELS[doc.type] || doc.type}</Badge></td>
+                    <td style={{ fontWeight: 600 }}>
+                      {doc.reference || `DOC-${doc.id}`}
+                    </td>
+                    <td>
+                      {doc.date
+                        ? new Date(doc.date).toLocaleDateString("fr-FR")
+                        : "—"}
+                    </td>
+                    <td>
+                      <Badge variant="secondary">
+                        {TYPE_LABELS[doc.type] || doc.type}
+                      </Badge>
+                    </td>
                     <td>{doc.supplier || "—"}</td>
-                    <td style={{ textAlign: "right" }}>{Number(doc.amount_ht || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2 })}</td>
-                    <td style={{ textAlign: "right" }}>{Number(doc.amount_tva || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2 })}</td>
-                    <td style={{ textAlign: "right", fontWeight: 600 }}>{Number(doc.amount_ttc || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2 })}</td>
-                    <td><Badge variant={STATUS_VARIANTS[doc.status] || "secondary"}>{STATUS_LABELS[doc.status] || doc.status}</Badge></td>
+                    <td style={{ textAlign: "right" }}>
+                      {Number(doc.amount_ht || 0).toLocaleString("fr-FR", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      {Number(doc.amount_tva || 0).toLocaleString("fr-FR", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </td>
+                    <td style={{ textAlign: "right", fontWeight: 600 }}>
+                      {Number(doc.amount_ttc || 0).toLocaleString("fr-FR", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </td>
+                    <td>
+                      <Badge
+                        variant={STATUS_VARIANTS[doc.status] || "secondary"}
+                      >
+                        {STATUS_LABELS[doc.status] || doc.status}
+                      </Badge>
+                    </td>
                     <td style={{ textAlign: "center" }}>
-                      <div style={{ display: "flex", gap: "0.25rem", justifyContent: "center" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "0.25rem",
+                          justifyContent: "center",
+                        }}
+                      >
                         <Form method="post" style={{ display: "inline" }}>
-                          <input type="hidden" name="intent" value="updateStatus" />
+                          <input
+                            type="hidden"
+                            name="intent"
+                            value="updateStatus"
+                          />
                           <input type="hidden" name="id" value={doc.id} />
-                          <input type="hidden" name="status" value={doc.status === "validated" ? "cancelled" : "validated"} />
-                          <button className="btn btn-sm btn-secondary" title={doc.status === "validated" ? "Annuler" : "Valider"}>
+                          <input
+                            type="hidden"
+                            name="status"
+                            value={
+                              doc.status === "validated"
+                                ? "cancelled"
+                                : "validated"
+                            }
+                          />
+                          <button
+                            className="btn btn-sm btn-secondary"
+                            title={
+                              doc.status === "validated" ? "Annuler" : "Valider"
+                            }
+                          >
                             {doc.status === "validated" ? "↩️" : "✅"}
                           </button>
                         </Form>
-                        <button className="btn btn-sm btn-secondary" onClick={() => handleEdit(doc)} title="Modifier">✏️</button>
-                        <Form method="post" style={{ display: "inline" }} onSubmit={(e) => { if (!window.confirm("Supprimer ce document ?")) e.preventDefault(); }}>
+                        <button
+                          className="btn btn-sm btn-secondary"
+                          onClick={() => handleEdit(doc)}
+                          title="Modifier"
+                        >
+                          ✏️
+                        </button>
+                        <Form
+                          method="post"
+                          style={{ display: "inline" }}
+                          onSubmit={(e) => {
+                            if (!window.confirm("Supprimer ce document ?"))
+                              e.preventDefault();
+                          }}
+                        >
                           <input type="hidden" name="intent" value="delete" />
                           <input type="hidden" name="id" value={doc.id} />
-                          <button className="btn btn-sm btn-danger" title="Supprimer">🗑️</button>
+                          <button
+                            className="btn btn-sm btn-danger"
+                            title="Supprimer"
+                          >
+                            🗑️
+                          </button>
                         </Form>
                       </div>
                     </td>
@@ -180,7 +338,9 @@ export default function Documents() {
         </div>
       </Card>
 
-      <Card title={`Écritures comptables (${accountingEntries.length} dernières)`}>
+      <Card
+        title={`Écritures comptables (${accountingEntries.length} dernières)`}
+      >
         <div className="table-container">
           <table>
             <thead>
@@ -191,27 +351,51 @@ export default function Documents() {
                 <th>Libellé</th>
                 <th style={{ textAlign: "right" }}>Débit</th>
                 <th style={{ textAlign: "right" }}>Crédit</th>
+                <th>Lettrage</th>
                 <th>Statut</th>
               </tr>
             </thead>
             <tbody>
               {accountingEntries.length === 0 ? (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: "center", padding: "2rem", color: "#999" }}>
-                    Aucune écriture comptable. Validez un document pour générer ses écritures.
+                  <td
+                    colSpan={8}
+                    style={{
+                      textAlign: "center",
+                      padding: "2rem",
+                      color: "#999",
+                    }}
+                  >
+                    Aucune écriture comptable. Validez un document pour générer
+                    ses écritures.
                   </td>
                 </tr>
               ) : (
                 accountingEntries.map((entry) => (
                   <tr key={entry.id}>
-                    <td style={{ fontFamily: "monospace" }}>{entry.entry_number}</td>
-                    <td>{entry.entry_date ? new Date(entry.entry_date).toLocaleDateString("fr-FR") : "—"}</td>
-                    <td style={{ fontFamily: "monospace", fontWeight: 600 }}>{entry.account_number}</td>
-                    <td>{entry.label}</td>
-                    <td style={{ textAlign: "right" }}>{Number(entry.debit || 0).toFixed(2)}</td>
-                    <td style={{ textAlign: "right" }}>{Number(entry.credit || 0).toFixed(2)}</td>
+                    <td style={{ fontFamily: "monospace" }}>
+                      {entry.entry_number}
+                    </td>
                     <td>
-                      <Badge variant={entry.is_validated ? "success" : "secondary"}>
+                      {entry.entry_date
+                        ? new Date(entry.entry_date).toLocaleDateString("fr-FR")
+                        : "—"}
+                    </td>
+                    <td style={{ fontFamily: "monospace", fontWeight: 600 }}>
+                      {entry.account_number}
+                    </td>
+                    <td>{entry.label}</td>
+                    <td style={{ textAlign: "right" }}>
+                      {Number(entry.debit || 0).toFixed(2)}
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      {Number(entry.credit || 0).toFixed(2)}
+                    </td>
+                    <td>{entry.lettrage || "-"}</td>
+                    <td>
+                      <Badge
+                        variant={entry.is_validated ? "success" : "secondary"}
+                      >
                         {entry.is_validated ? "Validée" : "Brouillon"}
                       </Badge>
                     </td>
@@ -223,23 +407,46 @@ export default function Documents() {
         </div>
       </Card>
 
-      <Modal isOpen={showCreate} onClose={closeModal} title={editId ? "Modifier le document" : "Nouveau document"}>
+      <Modal
+        isOpen={showCreate}
+        onClose={closeModal}
+        title={editId ? "Modifier le document" : "Nouveau document"}
+      >
         <Form method="post" onSubmit={() => setTimeout(closeModal, 100)}>
-          <input type="hidden" name="intent" value={editId ? "update" : "create"} />
+          <input
+            type="hidden"
+            name="intent"
+            value={editId ? "update" : "create"}
+          />
           {editId && <input type="hidden" name="id" value={editId} />}
 
           <div className="form-grid">
             <div className="form-group">
               <label>Référence *</label>
-              <input type="text" name="reference" defaultValue={defaultValues().reference} required placeholder="FACT-2025-001" />
+              <input
+                type="text"
+                name="reference"
+                defaultValue={defaultValues().reference}
+                required
+                placeholder="FACT-2025-001"
+              />
             </div>
             <div className="form-group">
               <label>Date *</label>
-              <input type="date" name="date" defaultValue={defaultValues().date} required />
+              <input
+                type="date"
+                name="date"
+                defaultValue={defaultValues().date}
+                required
+              />
             </div>
             <div className="form-group">
               <label>Date échéance</label>
-              <input type="date" name="due_date" defaultValue={defaultValues().due_date} />
+              <input
+                type="date"
+                name="due_date"
+                defaultValue={defaultValues().due_date}
+              />
             </div>
             <div className="form-group">
               <label>Type</label>
@@ -253,7 +460,12 @@ export default function Documents() {
             </div>
             <div className="form-group">
               <label>Fournisseur / Client</label>
-              <input type="text" name="supplier" defaultValue={defaultValues().supplier} placeholder="Nom" />
+              <input
+                type="text"
+                name="supplier"
+                defaultValue={defaultValues().supplier}
+                placeholder="Nom"
+              />
             </div>
             <div className="form-group">
               <label>Mode de paiement</label>
@@ -268,15 +480,30 @@ export default function Documents() {
             </div>
             <div className="form-group">
               <label>Montant HT (€)</label>
-              <input type="number" name="amount_ht" step="0.01" defaultValue={defaultValues().amount_ht} />
+              <input
+                type="number"
+                name="amount_ht"
+                step="0.01"
+                defaultValue={defaultValues().amount_ht}
+              />
             </div>
             <div className="form-group">
               <label>Montant TVA (€)</label>
-              <input type="number" name="amount_tva" step="0.01" defaultValue={defaultValues().amount_tva} />
+              <input
+                type="number"
+                name="amount_tva"
+                step="0.01"
+                defaultValue={defaultValues().amount_tva}
+              />
             </div>
             <div className="form-group">
               <label>Montant TTC (€)</label>
-              <input type="number" name="amount_ttc" step="0.01" defaultValue={defaultValues().amount_ttc} />
+              <input
+                type="number"
+                name="amount_ttc"
+                step="0.01"
+                defaultValue={defaultValues().amount_ttc}
+              />
             </div>
             <div className="form-group">
               <label>Statut</label>
@@ -290,18 +517,43 @@ export default function Documents() {
 
           <div className="form-group">
             <label>Notes</label>
-            <textarea name="notes" rows={3} defaultValue={defaultValues().notes} placeholder="Notes..." />
+            <textarea
+              name="notes"
+              rows={3}
+              defaultValue={defaultValues().notes}
+              placeholder="Notes..."
+            />
           </div>
 
           {actionData?.error && (
-            <div className="alert alert-danger" style={{ marginBottom: "1rem" }}>{actionData.error}</div>
+            <div
+              className="alert alert-danger"
+              style={{ marginBottom: "1rem" }}
+            >
+              {actionData.error}
+            </div>
           )}
 
           <div style={{ display: "flex", gap: "0.5rem", marginTop: "1.5rem" }}>
-            <button type="submit" className="btn btn-primary btn-large" style={{ flex: 1 }} disabled={isSubmitting}>
-              {isSubmitting ? "⏳ Enregistrement..." : editId ? "💾 Mettre à jour" : "✅ Créer le document"}
+            <button
+              type="submit"
+              className="btn btn-primary btn-large"
+              style={{ flex: 1 }}
+              disabled={isSubmitting}
+            >
+              {isSubmitting
+                ? "⏳ Enregistrement..."
+                : editId
+                  ? "💾 Mettre à jour"
+                  : "✅ Créer le document"}
             </button>
-            <button type="button" className="btn btn-secondary btn-large" onClick={closeModal}>Annuler</button>
+            <button
+              type="button"
+              className="btn btn-secondary btn-large"
+              onClick={closeModal}
+            >
+              Annuler
+            </button>
           </div>
         </Form>
       </Modal>

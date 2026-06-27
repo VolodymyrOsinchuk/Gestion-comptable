@@ -55,70 +55,9 @@ export default function NotFound() {
             🏠 Retour à l'accueil
           </Link>
 
-          <Link to="/documents" className="btn btn-secondary">
-            📄 Documents
-          </Link>
-
           <Link to="/companies" className="btn btn-secondary">
             🏢 Entreprises
           </Link>
-        </div>
-
-        <div style={{ marginTop: "3rem" }}>
-          <p
-            style={{
-              fontSize: "0.875rem",
-              color: "var(--text-secondary)",
-              marginBottom: "1rem",
-            }}
-          >
-            Pages populaires :
-          </p>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-              gap: "0.5rem",
-              fontSize: "0.875rem",
-            }}
-          >
-            <Link
-              to="/scanner"
-              style={{ color: "var(--primary)", textDecoration: "none" }}
-            >
-              📸 Scanner
-            </Link>
-            <Link
-              to="/banking"
-              style={{ color: "var(--primary)", textDecoration: "none" }}
-            >
-              🏦 Banque
-            </Link>
-            <Link
-              to="/tva"
-              style={{ color: "var(--primary)", textDecoration: "none" }}
-            >
-              % TVA
-            </Link>
-            <Link
-              to="/declarations"
-              style={{ color: "var(--primary)", textDecoration: "none" }}
-            >
-              📝 Déclarations
-            </Link>
-            <Link
-              to="/payroll"
-              style={{ color: "var(--primary)", textDecoration: "none" }}
-            >
-              👥 Paie
-            </Link>
-            <Link
-              to="/analysis"
-              style={{ color: "var(--primary)", textDecoration: "none" }}
-            >
-              📊 Analyse
-            </Link>
-          </div>
         </div>
       </div>
     </div>

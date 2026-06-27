@@ -7,9 +7,10 @@ import seedDatabase from "../seedData.js";
 
 // Ensure models are loaded and associations initialized
 import "../models/index.js";
+import { authenticate } from "../middleware/authMiddleware.js";
 
 // import documentRoutes from "./routes/documentRoutes";
-// import bankRoutes from "./routes/bankRoutes";
+import bankRoutes from "../routes/bankRoutes.js";
 // import declarationRoutes from "./routes/declarationRoutes";
 // import payrollRoutes from "./routes/payrollRoutes";
 // import accountingRoutes from "./routes/accountingRoutes";
@@ -39,6 +40,7 @@ app.get("/api/v1", (req, res) => {
 });
 
 // Routes
+app.use("/api/v1", authenticate);
 app.use("/api/v1/companies", companyRoutes);
 app.use("/api/v1/tva", tvaRoutes);
 app.use("/api/v1/documents", documentRoutes);
@@ -47,7 +49,7 @@ app.use("/api/v1/chart-of-accounts", chartOfAccountsRoutes);
 app.use("/api/v1/accounting", accountingRoutes);
 app.use("/api/v1/journals", journalRoutes);
 // app.use("/api/documents", documentRoutes);
-// app.use("/api/bank", bankRoutes);
+app.use("/api/v1/bank", bankRoutes);
 // app.use("/api/declarations", declarationRoutes);
 // app.use("/api/payroll", payrollRoutes);
 // app.use("/api/accounting", accountingRoutes);

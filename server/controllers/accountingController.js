@@ -13,23 +13,40 @@ export const createEntry = async (req, res) => {
     const { entry_date, journal_id, label, lines } = req.body;
 
     if (!entry_date || !journal_id || !label || !lines || lines.length < 2) {
-      return res.status(StatusCodes.BAD_REQUEST).json({ error: "Données incomplètes. Requiert: entry_date, journal_id, label, lines (min 2 lignes)" });
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({
+          error:
+            "Données incomplètes. Requiert: entry_date, journal_id, label, lines (min 2 lignes)",
+        });
     }
 
-    const totalDebit = round2(lines.reduce((s, l) => s + Number(l.debit || 0), 0));
-    const totalCredit = round2(lines.reduce((s, l) => s + Number(l.credit || 0), 0));
+    const totalDebit = round2(
+      lines.reduce((s, l) => s + Number(l.debit || 0), 0),
+    );
+    const totalCredit = round2(
+      lines.reduce((s, l) => s + Number(l.credit || 0), 0),
+    );
     if (Math.abs(totalDebit - totalCredit) > 0.01) {
-      return res.status(StatusCodes.BAD_REQUEST).json({ error: `Écriture non équilibrée: débit=${totalDebit} crédit=${totalCredit}` });
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({
+          error: `Écriture non équilibrée: débit=${totalDebit} crédit=${totalCredit}`,
+        });
     }
 
     const journal = await Journal.findByPk(journal_id);
     if (!journal || Number(journal.company_id) !== Number(companyId)) {
-      return res.status(StatusCodes.BAD_REQUEST).json({ error: "Journal invalide" });
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ error: "Journal invalide" });
     }
 
     const year = entry_date.slice(0, 4);
     const prefix = journal.code || "OD";
-    const count = await AccountingEntry.count({ where: { company_id: companyId, fiscal_year: year } });
+    const count = await AccountingEntry.count({
+      where: { company_id: companyId, fiscal_year: year },
+    });
     const entryNumber = `${prefix}-${year}-${String(count + 1).padStart(4, "0")}`;
 
     const entryRows = lines.map((line, idx) => ({
@@ -41,12 +58,16 @@ export const createEntry = async (req, res) => {
       label: line.label || label,
       debit: Number(line.debit || 0),
       credit: Number(line.credit || 0),
+      lettrage: line.lettrage || null,
+      is_lettred: Boolean(line.is_lettred),
       fiscal_year: Number(year),
       is_validated: true,
       validated_at: new Date(),
     }));
 
-    const created = await AccountingEntry.bulkCreate(entryRows);
+    const created = await AccountingEntry.bulkCreate(entryRows, {
+      individualHooks: true,
+    });
 
     // Increment usage_count for each account used
     const accountNumbers = [...new Set(lines.map((l) => l.account_number))];
@@ -62,7 +83,76 @@ export const createEntry = async (req, res) => {
       total_credit: totalCredit,
     });
   } catch (error) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: error.message });
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: error.message });
+  }
+};
+
+export const getEntries = async (req, res) => {
+  try {
+    const { companyId } = req.params;
+    const { year, account_number, start_date, end_date, page, pageSize } =
+      req.query;
+    const fiscalYear = year || new Date().getFullYear();
+
+    const where = { company_id: companyId, fiscal_year: fiscalYear };
+    if (account_number) {
+      where.account_number = { [Op.like]: `${account_number}%` };
+    }
+    if (start_date) {
+      where.entry_date = { ...(where.entry_date || {}), [Op.gte]: start_date };
+    }
+    if (end_date) {
+      where.entry_date = { ...(where.entry_date || {}), [Op.lte]: end_date };
+    }
+
+    const limit = Math.min(Number(pageSize) || 100, 1000);
+    const offset = ((Number(page) || 1) - 1) * limit;
+
+    const { rows: entries, count: total } =
+      await AccountingEntry.findAndCountAll({
+        where,
+        order: [
+          ["entry_date", "ASC"],
+          ["id", "ASC"],
+        ],
+        limit,
+        offset,
+      });
+
+    res
+      .status(StatusCodes.OK)
+      .json({ entries, total, page: Number(page) || 1, limit });
+  } catch (error) {
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ msg: "Erreur récupération écritures", error: error.message });
+  }
+};
+
+export const updateEntry = async (req, res) => {
+  try {
+    const { entryId } = req.params;
+    const { lettrage, is_lettred } = req.body;
+
+    const entry = await AccountingEntry.findByPk(entryId);
+    if (!entry) {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ msg: "Écriture introuvable" });
+    }
+
+    const updates = {};
+    if (lettrage !== undefined) updates.lettrage = lettrage || null;
+    if (is_lettred !== undefined) updates.is_lettred = Boolean(is_lettred);
+
+    await entry.update(updates);
+    res.status(StatusCodes.OK).json({ entry });
+  } catch (error) {
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ msg: "Erreur mise à jour écriture", error: error.message });
   }
 };
 
@@ -78,14 +168,25 @@ export const getBalance = async (req, res) => {
     const balances = {};
     for (const entry of entries) {
       const acct = entry.account_number;
-      if (!balances[acct]) balances[acct] = { account_number: acct, debit: 0, credit: 0, label: "" };
+      if (!balances[acct])
+        balances[acct] = {
+          account_number: acct,
+          debit: 0,
+          credit: 0,
+          label: "",
+        };
       balances[acct].debit += Number(entry.debit || 0);
       balances[acct].credit += Number(entry.credit || 0);
     }
 
     const chartAccounts = await ChartOfAccounts.findAll({
       where: { company_id: companyId },
-      attributes: ["account_number", "account_label", "account_class", "account_type"],
+      attributes: [
+        "account_number",
+        "account_label",
+        "account_class",
+        "account_type",
+      ],
     });
     const labelMap = {};
     const classMap = {};
@@ -121,41 +222,57 @@ export const getBalance = async (req, res) => {
     const totalCredit = round2(result.reduce((s, r) => s + r.total_credit, 0));
 
     res.status(StatusCodes.OK).json({
-      accounts: result.sort((a, b) => a.account_number.localeCompare(b.account_number)),
+      accounts: result.sort((a, b) =>
+        a.account_number.localeCompare(b.account_number),
+      ),
       totalDebit,
       totalCredit,
       fiscalYear,
       count: result.length,
     });
   } catch (error) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ msg: "Erreur balance", error: error.message });
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ msg: "Erreur balance", error: error.message });
   }
 };
 
 export const getGrandLivre = async (req, res) => {
   try {
     const { companyId } = req.params;
-    const { year, account_number, start_date, end_date, page, pageSize } = req.query;
+    const { year, account_number, start_date, end_date, page, pageSize } =
+      req.query;
     const fiscalYear = year || new Date().getFullYear();
 
     const where = { company_id: companyId, fiscal_year: fiscalYear };
-    if (account_number) where.account_number = { [Op.like]: `${account_number}%` };
-    if (start_date) where.entry_date = { ...(where.entry_date || {}), [Op.gte]: start_date };
-    if (end_date) where.entry_date = { ...(where.entry_date || {}), [Op.lte]: end_date };
+    if (account_number)
+      where.account_number = { [Op.like]: `${account_number}%` };
+    if (start_date)
+      where.entry_date = { ...(where.entry_date || {}), [Op.gte]: start_date };
+    if (end_date)
+      where.entry_date = { ...(where.entry_date || {}), [Op.lte]: end_date };
 
     const limit = Math.min(Number(pageSize) || 500, 1000);
     const offset = ((Number(page) || 1) - 1) * limit;
 
-    const { rows: entries, count: total } = await AccountingEntry.findAndCountAll({
-      where,
-      order: [["entry_date", "ASC"], ["id", "ASC"]],
-      limit,
-      offset,
-    });
+    const { rows: entries, count: total } =
+      await AccountingEntry.findAndCountAll({
+        where,
+        order: [
+          ["entry_date", "ASC"],
+          ["id", "ASC"],
+        ],
+        limit,
+        offset,
+      });
 
-    res.status(StatusCodes.OK).json({ entries, total, page: Number(page) || 1, limit });
+    res
+      .status(StatusCodes.OK)
+      .json({ entries, total, page: Number(page) || 1, limit });
   } catch (error) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ msg: "Erreur grand-livre", error: error.message });
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ msg: "Erreur grand-livre", error: error.message });
   }
 };
 
@@ -205,6 +322,8 @@ export const getIncomeStatement = async (req, res) => {
       fiscalYear: year,
     });
   } catch (error) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ msg: "Erreur compte de résultat", error: error.message });
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ msg: "Erreur compte de résultat", error: error.message });
   }
 };

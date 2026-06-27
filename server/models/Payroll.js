@@ -57,6 +57,11 @@ const Payroll = sequelize.define(
       { fields: ["period"] },
       { fields: ["status"] },
     ],
+    getterMethods: {
+      employees() { return this.employee_count; },
+      grossTotal() { return this.total_gross; },
+      netTotal() { return this.total_net; },
+    },
   }
 );
 

@@ -6,6 +6,11 @@ import Badge from "../../components/ui/Badge";
 export default function Payroll() {
   const { payroll } = useLoaderData();
 
+  const totalEmployees = payroll.reduce((s, p) => s + (p.employee_count || 0), 0);
+  const totalGross = payroll.reduce((s, p) => s + Number(p.total_gross || 0), 0);
+  const totalCharges = payroll.reduce((s, p) => s + Number(p.total_charges || 0), 0);
+  const totalNet = payroll.reduce((s, p) => s + Number(p.total_net || 0), 0);
+
   return (
     <>
       <div className="page-header">
@@ -13,10 +18,10 @@ export default function Payroll() {
       </div>
 
       <div className="stats-grid">
-        <StatCard label="Salariés" value="5" />
-        <StatCard label="Masse Salariale (mois)" value="12,500 €" />
-        <StatCard label="Charges Sociales" value="4,500 €" variant="warning" />
-        <StatCard label="Net à Payer" value="8,000 €" variant="success" />
+        <StatCard label="Salariés" value={String(totalEmployees)} />
+        <StatCard label="Masse Salariale (mois)" value={`${totalGross.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €`} />
+        <StatCard label="Charges Sociales" value={`${totalCharges.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €`} variant="warning" />
+        <StatCard label="Net à Payer" value={`${totalNet.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €`} variant="success" />
       </div>
 
       <Card title="Bulletin de Paie">
@@ -37,24 +42,21 @@ export default function Payroll() {
               {payroll.map((pay) => (
                 <tr key={pay.id}>
                   <td>{pay.period}</td>
-                  <td>{pay.employees}</td>
+                  <td>{pay.employee_count}</td>
                   <td>
-                    {pay.grossTotal.toLocaleString("fr-FR", {
+                    {Number(pay.total_gross).toLocaleString("fr-FR", {
                       minimumFractionDigits: 2,
-                    })}{" "}
-                    €
+                    })} €
                   </td>
                   <td>
-                    {pay.charges.toLocaleString("fr-FR", {
+                    {Number(pay.total_charges).toLocaleString("fr-FR", {
                       minimumFractionDigits: 2,
-                    })}{" "}
-                    €
+                    })} €
                   </td>
                   <td>
-                    {pay.netTotal.toLocaleString("fr-FR", {
+                    {Number(pay.total_net).toLocaleString("fr-FR", {
                       minimumFractionDigits: 2,
-                    })}{" "}
-                    €
+                    })} €
                   </td>
                   <td>
                     <Badge

@@ -75,6 +75,15 @@ const BankTransaction = sequelize.define(
       defaultValue: "pending",
       comment: "Statut du traitement de la transaction",
     },
+    matched_document_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: "documents",
+        key: "id",
+      },
+      comment: "Document commercial associé (facture, avoir, etc.)",
+    },
     matched_entry_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
