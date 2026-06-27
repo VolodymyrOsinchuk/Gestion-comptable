@@ -7,7 +7,9 @@
   "scripts": {
     "start": "node api/index.js",
     "dev": "nodemon api/index.js",
-    "build": "echo 'Build complete'"
+    "build": "echo 'Build complete'",
+    "seed": "node seedData.js",
+    "seed:prod": "node scripts/seedProd.js"
   },
   "engines": {
     "node": "24.x"

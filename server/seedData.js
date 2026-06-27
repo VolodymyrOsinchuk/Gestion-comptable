@@ -23,14 +23,14 @@ import { BASE_PCG_ACCOUNTS } from "./data/pcgAccounts.js";
 // ==========================================
 // FONCTION PRINCIPALE DE SEED
 // ==========================================
-async function seedDatabase() {
+async function seedDatabase({ force } = {}) {
   try {
     console.log("🌱 Démarrage du seed de la base de données...");
 
     // Ensure DB connection
     await sequelize.authenticate();
-    if (process.env.NODE_ENV === "production") {
-      console.error("❌ Seed refusé en production (sync force désactivé)");
+    if (!force && process.env.NODE_ENV === "production") {
+      console.error("❌ Seed refusé en production (passez { force: true } pour forcer)");
       return;
     }
     // 1. Créer les entreprises
@@ -158,9 +158,12 @@ async function seedCompanies() {
 
   const createdCompanies = [];
   for (const company of companies) {
-    const created = await Company.create(company);
-    createdCompanies.push(created);
-    console.log(`  ✓ ${company.name} créée`);
+    const [instance, isNew] = await Company.findOrCreate({
+      where: { siret: company.siret },
+      defaults: company,
+    });
+    createdCompanies.push(instance);
+    console.log(isNew ? `  ✓ ${company.name} créée` : `  ⏭️  ${company.name} existe déjà (ignoré)`);
   }
 
   return createdCompanies;
@@ -177,9 +180,17 @@ async function seedChartOfAccounts(companies) {
       company_id: company.id,
       ...a,
     }));
-    await ChartOfAccounts.bulkCreate(accounts);
+    let createdCount = 0;
+    for (const account of accounts) {
+      const [instance, isNew] = await ChartOfAccounts.findOrCreate({
+        where: { company_id: account.company_id, account_number: account.account_number },
+        defaults: account,
+      });
+      if (isNew) createdCount++;
+      console.log(isNew ? `  ✓ Compte ${account.account_number} créé` : `  ⏭️  Compte ${account.account_number} existe déjà (ignoré)`);
+    }
     console.log(
-      `  ✓ ${accounts.length} comptes PCG créés pour ${company.name}`
+      `  ✓ ${createdCount}/${accounts.length} comptes PCG créés pour ${company.name}`
     );
   }
 }
@@ -244,10 +255,14 @@ async function seedJournals(companies) {
     ];
 
     for (const journal of journals) {
-      const created = await Journal.create(journal);
-      allJournals.push(created);
+      const [instance, isNew] = await Journal.findOrCreate({
+        where: { company_id: journal.company_id, code: journal.code },
+        defaults: journal,
+      });
+      allJournals.push(instance);
+      console.log(isNew ? `  ✓ Journal ${journal.code} créé` : `  ⏭️  Journal ${journal.code} existe déjà (ignoré)`);
     }
-    console.log(`  ✓ ${journals.length} journaux créés pour ${company.name}`);
+    console.log(`  ✓ ${journals.length} journaux traités pour ${company.name}`);
   }
 
   return allJournals;
@@ -397,10 +412,14 @@ async function seedThirdParties(companies) {
     ];
 
     for (const thirdParty of thirdParties) {
-      const created = await ThirdParty.create(thirdParty);
-      allThirdParties.push(created);
+      const [instance, isNew] = await ThirdParty.findOrCreate({
+        where: { company_id: thirdParty.company_id, code: thirdParty.code },
+        defaults: thirdParty,
+      });
+      allThirdParties.push(instance);
+      console.log(isNew ? `  ✓ Tiers ${thirdParty.code} créé` : `  ⏭️  Tiers ${thirdParty.code} existe déjà (ignoré)`);
     }
-    console.log(`  ✓ ${thirdParties.length} tiers créés pour ${company.name}`);
+    console.log(`  ✓ ${thirdParties.length} tiers traités pour ${company.name}`);
   }
 
   return allThirdParties;
@@ -447,11 +466,15 @@ async function seedBankAccounts(companies, journals) {
     ];
 
     for (const bankAccount of bankAccounts) {
-      const created = await BankAccount.create(bankAccount);
-      allBankAccounts.push(created);
+      const [instance, isNew] = await BankAccount.findOrCreate({
+        where: { company_id: bankAccount.company_id, iban: bankAccount.iban },
+        defaults: bankAccount,
+      });
+      allBankAccounts.push(instance);
+      console.log(isNew ? `  ✓ Compte bancaire ${bankAccount.iban} créé` : `  ⏭️  Compte bancaire ${bankAccount.iban} existe déjà (ignoré)`);
     }
     console.log(
-      `  ✓ ${bankAccounts.length} comptes bancaires créés pour ${company.name}`
+      `  ✓ ${bankAccounts.length} comptes bancaires traités pour ${company.name}`
     );
   }
 
@@ -603,10 +626,14 @@ async function seedDocuments(companies, thirdParties) {
     ];
 
     for (const document of documents) {
-      const created = await Document.create(document);
-      allDocuments.push(created);
+      const [instance, isNew] = await Document.findOrCreate({
+        where: { company_id: document.company_id, reference: document.reference },
+        defaults: document,
+      });
+      allDocuments.push(instance);
+      console.log(isNew ? `  ✓ Document ${document.reference} créé` : `  ⏭️  Document ${document.reference} existe déjà (ignoré)`);
     }
-    console.log(`  ✓ ${documents.length} documents créés pour ${company.name}`);
+    console.log(`  ✓ ${documents.length} documents traités pour ${company.name}`);
   }
 
   return allDocuments;
@@ -1056,10 +1083,14 @@ async function seedAccountingEntries(companies, journals, thirdParties) {
     ];
 
     for (const entry of allEntries) {
-      await AccountingEntry.create(entry);
+      const [instance, isNew] = await AccountingEntry.findOrCreate({
+        where: { company_id: entry.company_id, journal_id: entry.journal_id, entry_number: entry.entry_number },
+        defaults: entry,
+      });
+      console.log(isNew ? `  ✓ Écriture ${entry.entry_number} créée` : `  ⏭️  Écriture ${entry.entry_number} existe déjà (ignoré)`);
     }
     console.log(
-      `  ✓ ${allEntries.length} écritures créées pour ${company.name}`
+      `  ✓ ${allEntries.length} écritures traitées pour ${company.name}`
     );
   }
 }
@@ -1166,10 +1197,14 @@ async function seedBankTransactions(companies, bankAccounts, thirdParties) {
     ];
 
     for (const transaction of transactions) {
-      await BankTransaction.create(transaction);
+      const [instance, isNew] = await BankTransaction.findOrCreate({
+        where: { company_id: transaction.company_id, reference: transaction.reference },
+        defaults: transaction,
+      });
+      console.log(isNew ? `  ✓ Transaction ${transaction.reference} créée` : `  ⏭️  Transaction ${transaction.reference} existe déjà (ignoré)`);
     }
     console.log(
-      `  ✓ ${transactions.length} transactions bancaires créées pour ${company.name}`
+      `  ✓ ${transactions.length} transactions bancaires traitées pour ${company.name}`
     );
   }
 }
@@ -1179,17 +1214,20 @@ async function seedBankTransactions(companies, bankAccounts, thirdParties) {
 // ==========================================
 async function seedTVAReports(companies) {
   for (const company of companies) {
-    const tvaReport = await TVAReport.create({
-      company_id: company.id,
-      period_start: "2025-01-01",
-      period_end: "2025-01-31",
-      period_label: "2025-01",
-      frequency: "monthly",
-      total_collectee: 2600.0,
-      total_deductible_abs: 386.0,
-      total_deductible_immob: 0,
-      net_due: 2214.0,
-      status: "computed",
+    const [tvaReport, tvaNew] = await TVAReport.findOrCreate({
+      where: { company_id: company.id, period_label: "2025-01" },
+      defaults: {
+        company_id: company.id,
+        period_start: "2025-01-01",
+        period_end: "2025-01-31",
+        period_label: "2025-01",
+        frequency: "monthly",
+        total_collectee: 2600.0,
+        total_deductible_abs: 386.0,
+        total_deductible_immob: 0,
+        net_due: 2214.0,
+        status: "computed",
+      },
     });
 
     const tvaItems = [
@@ -1269,7 +1307,7 @@ async function seedTVAReports(companies) {
       await TVAItem.create(item);
     }
 
-    console.log(`  ✓ Rapport TVA créé pour ${company.name}`);
+    console.log(tvaNew ? `  ✓ Rapport TVA créé pour ${company.name}` : `  ⏭️  Rapport TVA existe déjà pour ${company.name}`);
   }
 }
 
@@ -1312,10 +1350,14 @@ async function seedDeclarations(companies) {
     ];
 
     for (const declaration of declarations) {
-      await Declaration.create(declaration);
+      const [instance, isNew] = await Declaration.findOrCreate({
+        where: { company_id: declaration.company_id, type: declaration.type, period_start: declaration.period_start },
+        defaults: declaration,
+      });
+      console.log(isNew ? `  ✓ Déclaration ${declaration.type} (${declaration.period_start}) créée` : `  ⏭️  Déclaration ${declaration.type} (${declaration.period_start}) existe déjà (ignoré)`);
     }
     console.log(
-      `  ✓ ${declarations.length} déclarations créées pour ${company.name}`
+      `  ✓ ${declarations.length} déclarations traitées pour ${company.name}`
     );
   }
 }
@@ -1349,9 +1391,13 @@ async function seedPayrolls(companies) {
     ];
 
     for (const payroll of payrolls) {
-      await Payroll.create(payroll);
+      const [instance, isNew] = await Payroll.findOrCreate({
+        where: { company_id: payroll.company_id, period: payroll.period },
+        defaults: payroll,
+      });
+      console.log(isNew ? `  ✓ Paie ${payroll.period} créée` : `  ⏭️  Paie ${payroll.period} existe déjà (ignoré)`);
     }
-    console.log(`  ✓ ${payrolls.length} paies créées pour ${company.name}`);
+    console.log(`  ✓ ${payrolls.length} paies traitées pour ${company.name}`);
   }
 }
 
@@ -1364,7 +1410,7 @@ export default seedDatabase;
 if (import.meta.url === `file://${process.argv[1]}`) {
   sequelize
     .sync({ force: true })
-    .then(() => seedDatabase())
+    .then(() => seedDatabase({ force: true }))
     .then(() => {
       console.log("✅ Seed terminé avec succès");
       process.exit(0);
