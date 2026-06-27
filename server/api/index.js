@@ -18,6 +18,7 @@ import "../models/index.js";
 import companyRoutes from "../routes/companyRoutes.js";
 import tvaRoutes from "../routes/tvaRoutes.js";
 import documentRoutes from "../routes/documentRoutes.js";
+import clotureRoutes from "../routes/clotureRoutes.js";
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.get("/api/v1", (req, res) => {
 app.use("/api/v1/companies", companyRoutes);
 app.use("/api/v1/tva", tvaRoutes);
 app.use("/api/v1/documents", documentRoutes);
+app.use("/api/v1/closing", clotureRoutes);
 // app.use("/api/documents", documentRoutes);
 // app.use("/api/bank", bankRoutes);
 // app.use("/api/declarations", declarationRoutes);

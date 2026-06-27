@@ -28,6 +28,10 @@ async function seedDatabase() {
 
     // Ensure DB connection and recreate tables before seeding (dev only)
     await sequelize.authenticate();
+    if (process.env.NODE_ENV === "production") {
+      console.error("❌ Seed refusé en production (sync force désactivé)");
+      return;
+    }
     await sequelize.sync({ force: true });
     // 1. Créer les entreprises
     console.log("📊 Création des entreprises...");

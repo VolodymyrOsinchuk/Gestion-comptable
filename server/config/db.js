@@ -16,19 +16,15 @@ dotenv.config({
   path: path.join(__dirname, "..", envFile),
 });
 
-// console.log("DATABASE_URL", process.env.DATABASE_URL);
+const dbUrl = new URL(process.env.DATABASE_URL);
+dbUrl.searchParams.set("uselibpqcompat", "true");
+dbUrl.searchParams.set("sslmode", "require");
 
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
+const sequelize = new Sequelize(dbUrl.toString(), {
   dialect: "postgres",
   protocol: "postgres",
   dialectModule: pg,
   logging: false,
-  dialectOptions: {
-    ssl:
-      process.env.NODE_ENV === "production"
-        ? { require: true, rejectUnauthorized: false }
-        : false,
-  },
 });
 
 export default sequelize;

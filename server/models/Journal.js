@@ -35,7 +35,8 @@ const Journal = sequelize.define(
         "BQ", // Banque - Mouvements bancaires
         "CA", // Caisse - Espèces
         "OD", // Opérations Diverses - Écritures manuelles
-        "AN" // À-Nouveaux - Reprise des soldes N-1
+        "AN", // À-Nouveaux - Reprise des soldes N-1
+        "CL" // Clôture - Résultat d'exercice
       ),
       allowNull: false,
       comment: "Type de journal selon les normes comptables",

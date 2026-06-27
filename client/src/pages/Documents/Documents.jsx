@@ -687,10 +687,10 @@ const PCG_2025 = {
 };
 
 const JOURNALS = [
-  { code: "ACH", label: "Achats" },
-  { code: "VEN", label: "Ventes" },
+  { code: "AC", label: "Achats" },
+  { code: "VE", label: "Ventes" },
   { code: "BQ", label: "Banque" },
-  { code: "CAIS", label: "Caisse" },
+  { code: "CA", label: "Caisse" },
   { code: "OD", label: "Opérations Diverses" },
 ];
 

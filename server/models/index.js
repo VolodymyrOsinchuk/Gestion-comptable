@@ -10,6 +10,7 @@ import TVAItem from "./TVAItem.js";
 import ChartOfAccounts from "./ChartOfAccounts.js";
 import ThirdParty from "./ThirdParty.js";
 import Journal from "./Journal.js";
+import FiscalYear from "./FiscalYear.js";
 
 // Associations
 BankAccount.hasMany(BankTransaction, {
@@ -55,6 +56,10 @@ ThirdParty.hasMany(AccountingEntry, {
 TVAReport.hasMany(TVAItem, { foreignKey: "tva_report_id", as: "items" });
 TVAItem.belongsTo(TVAReport, { foreignKey: "tva_report_id", as: "report" });
 
+// FiscalYear association
+Company.hasMany(FiscalYear, { foreignKey: "company_id", as: "fiscalYears" });
+FiscalYear.belongsTo(Company, { foreignKey: "company_id", as: "company" });
+
 export {
   Document,
   BankTransaction,
@@ -68,4 +73,5 @@ export {
   ChartOfAccounts,
   ThirdParty,
   Journal,
+  FiscalYear,
 };

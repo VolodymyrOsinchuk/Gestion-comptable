@@ -18,10 +18,10 @@ export const createReport = async (req, res) => {
       if (items.length) {
         const itemsToCreate = items.map((it) => ({
           ...it,
-          net: (
-            parseFloat(it.tva_collected || 0) -
-            parseFloat(it.tva_deductible || 0)
-          ).toFixed(2),
+          net: Math.round(
+            (parseFloat(it.tva_collected || 0) -
+              parseFloat(it.tva_deductible || 0)) * 100
+          ) / 100,
           tva_report_id: report.id,
         }));
         await TVAItem.bulkCreate(itemsToCreate, { transaction: t });
@@ -82,10 +82,10 @@ export const calculateReport = async (req, res) => {
         await TVAItem.destroy({ where: { tva_report_id: id }, transaction: t });
         const itemsToCreate = items.map((it) => ({
           ...it,
-          net: (
-            parseFloat(it.tva_collected || 0) -
-            parseFloat(it.tva_deductible || 0)
-          ).toFixed(2),
+          net: Math.round(
+            (parseFloat(it.tva_collected || 0) -
+              parseFloat(it.tva_deductible || 0)) * 100
+          ) / 100,
           tva_report_id: id,
         }));
         await TVAItem.bulkCreate(itemsToCreate, { transaction: t });
@@ -107,9 +107,9 @@ export const calculateReport = async (req, res) => {
 
       const net = totals.total_collected - totals.total_deductible;
 
-      report.total_collected = totals.total_collected.toFixed(2);
-      report.total_deductible = totals.total_deductible.toFixed(2);
-      report.net = net.toFixed(2);
+      report.total_collected = Number(totals.total_collected.toFixed(2));
+      report.total_deductible = Number(totals.total_deductible.toFixed(2));
+      report.net = Number(net.toFixed(2));
       report.status = "calculated";
 
       await report.save({ transaction: t });

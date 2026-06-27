@@ -10,8 +10,9 @@ import StatCard from "../../components/ui/StatCard";
 import Badge from "../../components/ui/Badge";
 
 export default function Companies() {
-  // const { companies, stats } = useLoaderData();
   const loaderData = useLoaderData();
+  const companies = loaderData?.companies || [];
+  const stats = loaderData?.stats || { total: 0, active: 0 };
   console.log("🚀 ~ Companies ~ loaderData:", loaderData);
   const navigation = useNavigation();
   const actionData = useActionData();

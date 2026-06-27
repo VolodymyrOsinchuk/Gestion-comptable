@@ -115,6 +115,18 @@ const AccountingEntry = sequelize.define(
   {
     tableName: "accounting_entries",
     timestamps: true,
+    hooks: {
+      beforeUpdate: (entry, options) => {
+        if (entry.previous("is_validated") === true) {
+          throw new Error("Impossible de modifier une écriture validée. Utilisez une contrepassation.");
+        }
+      },
+      beforeDestroy: (entry, options) => {
+        if (entry.is_validated === true) {
+          throw new Error("Impossible de supprimer une écriture validée. Utilisez une contrepassation.");
+        }
+      },
+    },
     indexes: [
       { fields: ["company_id"] },
       { fields: ["journal_id"] },

@@ -120,11 +120,6 @@ const Document = sequelize.define(
       allowNull: true,
       comment: "Données extraites par OCR (reconnaissance automatique)",
     },
-    file_path: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      comment: "Chemin vers le fichier PDF du document (alternatif)",
-    },
   },
   {
     tableName: "documents",
