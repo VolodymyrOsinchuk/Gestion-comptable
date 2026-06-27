@@ -13,6 +13,7 @@ const menuItems = [
   { path: "declarations", icon: "📝", label: "Déclarations Fiscales" },
   { path: "payroll", icon: "👥", label: "Paie & Social" },
   { path: "accounting", icon: "🧮", label: "Comptabilité" },
+  { path: "plan-comptable", icon: "📒", label: "Plan Comptable" },
   { path: "closing", icon: "⚖️", label: "Clôture & Bilan" },
   { path: "analysis", icon: "📊", label: "Analyse Financière" },
   { path: "operations", icon: "🎯", label: "Centre Opérations" },
@@ -168,7 +169,7 @@ export default function Sidebar({ companies = [] }) {
         {selectedCompany && (
           <div
             style={{
-              position: "absolute",
+              position: "static",
               bottom: "1rem",
               left: "1rem",
               right: "1rem",

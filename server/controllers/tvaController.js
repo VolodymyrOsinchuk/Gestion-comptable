@@ -1,168 +1,194 @@
-import TVAReport from "../models/TVAReport.js";
-import { TVAItem } from "../models/index.js";
+import { StatusCodes } from "http-status-codes";
+import TvaDeclaration from "../models/TVAReport.js";
+import TvaDeclarationLine from "../models/TVAItem.js";
 import sequelize from "../config/db.js";
+import {
+  computeVatForPeriod,
+  generateDeclaration,
+  lockDeclaration,
+  unlockDeclaration,
+  getVatStatus,
+  recomputeOpenDeclarations,
+  detectFrequency,
+  getPeriodRange,
+  VAT_TYPE_LABELS,
+} from "../services/tvaService.js";
 
-/**
- * Create a new TVA report with optional items
- * body: { period, regime, due_date, notes, items: [{ rate, base_ht, tva_collected, tva_deductible }] }
- */
-export const createReport = async (req, res) => {
-  const { period, regime, due_date, notes, items = [] } = req.body;
+// GET /api/v1/tva/companies/:companyId/status
+export const getStatus = async (req, res) => {
   try {
-    const result = await sequelize.transaction(async (t) => {
-      const report = await TVAReport.create(
-        { period, regime, due_date, notes },
-        { transaction: t }
+    const { companyId } = req.params;
+    const status = await getVatStatus(companyId);
+    res.status(StatusCodes.OK).json(status);
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      msg: "Erreur statut TVA", error: error.message,
+    });
+  }
+};
+
+// GET /api/v1/tva/companies/:companyId/declarations
+export const listDeclarations = async (req, res) => {
+  try {
+    const { companyId } = req.params;
+    const declarations = await TvaDeclaration.findAll({
+      where: { company_id: companyId },
+      include: [{ model: TvaDeclarationLine, as: "lines" }],
+      order: [["period_start", "DESC"]],
+    });
+    res.status(StatusCodes.OK).json({ declarations });
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      msg: "Erreur liste déclarations", error: error.message,
+    });
+  }
+};
+
+// GET /api/v1/tva/declarations/:id
+export const getDeclaration = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const declaration = await TvaDeclaration.findByPk(id, {
+      include: [{ model: TvaDeclarationLine, as: "lines" }],
+    });
+    if (!declaration) {
+      return res.status(StatusCodes.NOT_FOUND).json({ msg: "Déclaration introuvable" });
+    }
+    res.status(StatusCodes.OK).json({ declaration });
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      msg: "Erreur récupération déclaration", error: error.message,
+    });
+  }
+};
+
+// POST /api/v1/tva/companies/:companyId/declarations/generate
+// body: { period_start, period_end } or computed from current period
+export const createDeclaration = async (req, res) => {
+  const { companyId } = req.params;
+  let { period_start, period_end } = req.body;
+
+  try {
+    if (!period_start || !period_end) {
+      const company = await (await import("../models/Company.js")).default.findByPk(companyId);
+      if (!company) return res.status(404).json({ msg: "Entreprise introuvable" });
+      const freq = detectFrequency(company);
+      const now = new Date();
+      const range = getPeriodRange(
+        now.getFullYear(),
+        freq === "yearly" ? 1 : freq === "quarterly" ? Math.ceil((now.getMonth() + 1) / 3) : now.getMonth() + 1,
+        freq
       );
+      period_start = range.start;
+      period_end = range.end;
+    }
 
-      if (items.length) {
-        const itemsToCreate = items.map((it) => ({
-          ...it,
-          net: Math.round(
-            (parseFloat(it.tva_collected || 0) -
-              parseFloat(it.tva_deductible || 0)) * 100
-          ) / 100,
-          tva_report_id: report.id,
-        }));
-        await TVAItem.bulkCreate(itemsToCreate, { transaction: t });
-      }
-
-      return report;
-    });
-
-    return res.status(201).json({ message: "Report created", report: result });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "Unable to create report" });
-  }
-};
-
-export const listReports = async (req, res) => {
-  try {
-    const reports = await TVAReport.findAll({
-      include: [{ model: TVAItem, as: "items" }],
-      order: [["period", "DESC"]],
-    });
-    return res.json(reports);
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "Unable to fetch reports" });
-  }
-};
-
-export const getReport = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const report = await TVAReport.findByPk(id, {
-      include: [{ model: TVAItem, as: "items" }],
-    });
-    if (!report) return res.status(404).json({ error: "Report not found" });
-    return res.json(report);
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "Unable to fetch report" });
-  }
-};
-
-/**
- * Calculate totals for a report from its items.
- * If items are provided in body, they will replace existing items before calculation.
- * body: { items?: [...] }
- */
-export const calculateReport = async (req, res) => {
-  const { id } = req.params;
-  const { items } = req.body;
-  try {
     const result = await sequelize.transaction(async (t) => {
-      const report = await TVAReport.findByPk(id, { transaction: t });
-      if (!report) throw new Error("Report not found");
-
-      if (Array.isArray(items)) {
-        // replace items
-        await TVAItem.destroy({ where: { tva_report_id: id }, transaction: t });
-        const itemsToCreate = items.map((it) => ({
-          ...it,
-          net: Math.round(
-            (parseFloat(it.tva_collected || 0) -
-              parseFloat(it.tva_deductible || 0)) * 100
-          ) / 100,
-          tva_report_id: id,
-        }));
-        await TVAItem.bulkCreate(itemsToCreate, { transaction: t });
-      }
-
-      const savedItems = await TVAItem.findAll({
-        where: { tva_report_id: id },
-        transaction: t,
-      });
-
-      const totals = savedItems.reduce(
-        (acc, it) => {
-          acc.total_collected += parseFloat(it.tva_collected || 0);
-          acc.total_deductible += parseFloat(it.tva_deductible || 0);
-          return acc;
-        },
-        { total_collected: 0, total_deductible: 0 }
-      );
-
-      const net = totals.total_collected - totals.total_deductible;
-
-      report.total_collected = Number(totals.total_collected.toFixed(2));
-      report.total_deductible = Number(totals.total_deductible.toFixed(2));
-      report.net = Number(net.toFixed(2));
-      report.status = "calculated";
-
-      await report.save({ transaction: t });
-
-      return { report, items: savedItems };
+      return await generateDeclaration(companyId, period_start, period_end, { transaction: t });
     });
 
-    return res.json({
-      message: "Calcul effectué",
-      report: result.report,
-      items: result.items,
+    res.status(StatusCodes.CREATED).json({
+      msg: "Déclaration générée automatiquement",
+      declaration: result.declaration,
+      lines: result.lines,
+      summary: result.summary,
+      totals: result.totals,
     });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: err.message || "Calculation failed" });
+  } catch (error) {
+    res.status(StatusCodes.BAD_REQUEST).json({
+      msg: error.message || "Erreur génération déclaration",
+      error: error.message,
+    });
   }
 };
 
-/**
- * Placeholder to "generate" CA3 declaration.
- * In a real app this would build the CA3 payload and export PDF or send to external API.
- */
-export const generateCA3 = async (req, res) => {
-  const { id } = req.params;
+// POST /api/v1/tva/companies/:companyId/declarations/compute-preview
+// Preview without saving
+export const previewDeclaration = async (req, res) => {
   try {
-    const report = await TVAReport.findByPk(id, {
-      include: [{ model: TVAItem, as: "items" }],
+    const { companyId } = req.params;
+    const { period_start, period_end } = req.body;
+
+    if (!period_start || !period_end) {
+      return res.status(StatusCodes.BAD_REQUEST).json({ msg: "period_start et period_end requis" });
+    }
+
+    const computed = await computeVatForPeriod(companyId, period_start, period_end);
+    res.status(StatusCodes.OK).json({
+      msg: "Aperçu calculé avec succès",
+      ...computed,
     });
-    if (!report) return res.status(404).json({ error: "Report not found" });
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      msg: "Erreur calcul", error: error.message,
+    });
+  }
+};
 
-    // Build a minimal CA3 payload
-    const payload = {
-      period: report.period,
-      regime: report.regime,
-      total_collected: report.total_collected,
-      total_deductible: report.total_deductible,
-      net: report.net,
-      items: report.items.map((it) => ({
-        rate: it.rate,
-        base_ht: it.base_ht,
-        tva_collected: it.tva_collected,
-        tva_deductible: it.tva_deductible,
-        net: it.net,
-      })),
-    };
+// PATCH /api/v1/tva/declarations/:id/lock
+export const lockDeclarationHandler = async (req, res) => {
+  try {
+    const declaration = await lockDeclaration(req.params.id);
+    res.status(StatusCodes.OK).json({
+      msg: "Période verrouillée. Aucune modification possible sans déverrouillage.",
+      declaration,
+    });
+  } catch (error) {
+    res.status(StatusCodes.BAD_REQUEST).json({
+      msg: error.message || "Erreur verrouillage",
+      error: error.message,
+    });
+  }
+};
 
-    // mark as declared (example)
-    report.status = "declared";
-    await report.save();
+// PATCH /api/v1/tva/declarations/:id/unlock
+export const unlockDeclarationHandler = async (req, res) => {
+  try {
+    const declaration = await unlockDeclaration(req.params.id);
+    res.status(StatusCodes.OK).json({
+      msg: "Période déverrouillée. Les écritures peuvent être modifiées.",
+      declaration,
+    });
+  } catch (error) {
+    res.status(StatusCodes.BAD_REQUEST).json({
+      msg: error.message || "Erreur déverrouillage",
+      error: error.message,
+    });
+  }
+};
 
-    return res.json({ message: "CA3 generated (payload)", payload });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "Unable to generate CA3" });
+// POST /api/v1/tva/companies/:companyId/declarations/recompute
+export const recomputeAll = async (req, res) => {
+  try {
+    const { companyId } = req.params;
+    const results = await recomputeOpenDeclarations(companyId);
+    res.status(StatusCodes.OK).json({
+      msg: `${results.filter(r => r.status === "recomputed").length} déclaration(s) recalculée(s)`,
+      results,
+    });
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      msg: "Erreur recalcul", error: error.message,
+    });
+  }
+};
+
+// GET /api/v1/tva/companies/:companyId/entries/vat
+// Get all VAT entries for a period (for audit/verification)
+export const getVatEntries = async (req, res) => {
+  try {
+    const { companyId } = req.params;
+    const { period_start, period_end } = req.query;
+
+    if (!period_start || !period_end) {
+      return res.status(StatusCodes.BAD_REQUEST).json({ msg: "period_start et period_end requis" });
+    }
+
+    const computed = await computeVatForPeriod(companyId, period_start, period_end);
+    res.status(StatusCodes.OK).json(computed);
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      msg: "Erreur récupération écritures TVA", error: error.message,
+    });
   }
 };

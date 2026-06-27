@@ -9,6 +9,14 @@ const Declaration = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
+    company_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "companies",
+        key: "id",
+      },
+    },
     type: {
       type: DataTypes.ENUM(
         "is",
@@ -58,6 +66,7 @@ const Declaration = sequelize.define(
   {
     tableName: "declarations",
     indexes: [
+      { fields: ["company_id"] },
       { fields: ["type"] },
       { fields: ["deadline"] },
       { fields: ["status"] },

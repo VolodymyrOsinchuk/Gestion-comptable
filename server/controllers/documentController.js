@@ -1,5 +1,6 @@
 import Document from "../models/Document.js";
 import AccountingEntry from "../models/AccountingEntry.js";
+import ThirdParty from "../models/ThirdParty.js";
 import sequelize from "../config/db.js";
 import { StatusCodes } from "http-status-codes";
 import { generateAccountingEntries } from "../services/accountingService.js";

@@ -15,11 +15,11 @@ const TVA = lazy(() => import("./pages/TVA/TVA"));
 const Declarations = lazy(() => import("./pages/Declarations/Declarations"));
 const Payroll = lazy(() => import("./pages/Payroll/Payroll"));
 const Accounting = lazy(() => import("./pages/Accounting/Accounting"));
+const PlanComptable = lazy(() => import("./pages/Accounting/PlanComptable"));
 const Closing = lazy(() => import("./pages/Closing/Closing"));
 const Analysis = lazy(() => import("./pages/Analysis/Analysis"));
 const Operations = lazy(() => import("./pages/Operations/Operations"));
 const Companies = lazy(() => import("./pages/Companies/Companies"));
-const Company = lazy(() => import("./pages/Companies/Company"));
 const NotFound = lazy(() => import("./pages/Error/NotFound.jsx"));
 const ErrorPage = lazy(() => import("./pages/Error/ErrorPage.jsx"));
 // Loaders
@@ -27,7 +27,6 @@ import { documentsLoader } from "./pages/Documents/documentsLoader.js";
 import { declarationsLoader } from "./pages/Declarations/declarationsLoader.js";
 import { payrollLoader } from "./pages/Payroll/payrollLoader.js";
 import { companiesLoader } from "./pages/Companies/companiesLoader.js";
-import { companyLoader } from "./pages/Companies/companyLoader.js";
 import { tvaLoader } from "./pages/TVA/tvaLoader.js";
 
 // Actions
@@ -158,6 +157,14 @@ const router = createBrowserRouter([
             element: (
               <SuspenseWrapper>
                 <Accounting />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: "plan-comptable",
+            element: (
+              <SuspenseWrapper>
+                <PlanComptable />
               </SuspenseWrapper>
             ),
           },

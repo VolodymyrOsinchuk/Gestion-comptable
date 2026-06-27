@@ -1,14 +1,21 @@
-import { toast } from "react-toastify";
-import customFetch from "../../utils/customFetch.js";
-
 export const tvaLoader = async ({ params }) => {
+  const { companyId } = params;
+  if (!companyId) return { declarations: [], status: null };
   try {
-    const resp = await customFetch.get(`/tva`);
-    console.log("🚀 ~ tvaLoader ~ resp:", resp);
-    return resp.data;
+    const [statusRes, declsRes] = await Promise.all([
+      import("../../utils/customFetch.js").then((m) =>
+        m.default.get(`/tva/companies/${companyId}/status`)
+      ),
+      import("../../utils/customFetch.js").then((m) =>
+        m.default.get(`/tva/companies/${companyId}/declarations`)
+      ),
+    ]);
+    return {
+      status: statusRes.data,
+      declarations: declsRes.data.declarations || [],
+    };
   } catch (error) {
-    console.error("Error fetching TVA data:", error);
-    toast.error(error?.response?.data?.msg);
-    return error;
+    console.error("TVA loader error:", error);
+    return { declarations: [], status: null, error: error.message };
   }
 };

@@ -104,6 +104,11 @@ const Company = sequelize.define(
       defaultValue: "normal",
       comment: "Régime de TVA applicable",
     },
+    tva_frequency: {
+      type: DataTypes.ENUM("monthly", "quarterly", "yearly"),
+      allowNull: true,
+      comment: "Fréquence de déclaration (auto-détectée si non renseignée)",
+    },
     accounting_plan: {
       type: DataTypes.ENUM("PCG", "Custom"),
       defaultValue: "PCG",

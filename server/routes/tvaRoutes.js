@@ -1,27 +1,29 @@
-import express from "express";
+import { Router } from "express";
 import {
-  createReport,
-  listReports,
-  getReport,
-  calculateReport,
-  generateCA3,
+  getStatus,
+  listDeclarations,
+  getDeclaration,
+  createDeclaration,
+  previewDeclaration,
+  lockDeclarationHandler,
+  unlockDeclarationHandler,
+  recomputeAll,
+  getVatEntries,
 } from "../controllers/tvaController.js";
 
-const router = express.Router();
+const router = Router();
 
-// GET /api/tva
-router.get("/", listReports);
+// Company-scoped routes
+router.get("/companies/:companyId/status", getStatus);
+router.get("/companies/:companyId/declarations", listDeclarations);
+router.post("/companies/:companyId/declarations/generate", createDeclaration);
+router.post("/companies/:companyId/declarations/compute-preview", previewDeclaration);
+router.post("/companies/:companyId/declarations/recompute", recomputeAll);
+router.get("/companies/:companyId/entries/vat", getVatEntries);
 
-// GET /api/tva/:id
-router.get("/:id", getReport);
-
-// POST /api/tva
-router.post("/", createReport);
-
-// POST /api/tva/:id/calculate
-router.post("/:id/calculate", calculateReport);
-
-// POST /api/tva/:id/generate-ca3
-router.post("/:id/generate-ca3", generateCA3);
+// Declaration-scoped routes
+router.get("/declarations/:id", getDeclaration);
+router.patch("/declarations/:id/lock", lockDeclarationHandler);
+router.patch("/declarations/:id/unlock", unlockDeclarationHandler);
 
 export default router;

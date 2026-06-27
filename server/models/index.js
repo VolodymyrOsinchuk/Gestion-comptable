@@ -5,8 +5,8 @@ import Declaration from "./Declaration.js";
 import AccountingEntry from "./AccountingEntry.js";
 import Payroll from "./Payroll.js";
 import Company from "./Company.js";
-import TVAReport from "./TVAReport.js";
-import TVAItem from "./TVAItem.js";
+import TvaDeclaration from "./TVAReport.js";
+import TvaDeclarationLine from "./TVAItem.js";
 import ChartOfAccounts from "./ChartOfAccounts.js";
 import ThirdParty from "./ThirdParty.js";
 import Journal from "./Journal.js";
@@ -53,8 +53,11 @@ ThirdParty.hasMany(AccountingEntry, {
   as: "accountingEntries",
 });
 
-TVAReport.hasMany(TVAItem, { foreignKey: "tva_report_id", as: "items" });
-TVAItem.belongsTo(TVAReport, { foreignKey: "tva_report_id", as: "report" });
+TvaDeclaration.hasMany(TvaDeclarationLine, { foreignKey: "tva_report_id", as: "lines" });
+TvaDeclarationLine.belongsTo(TvaDeclaration, { foreignKey: "tva_report_id", as: "declaration" });
+
+TvaDeclaration.belongsTo(Company, { foreignKey: "company_id", as: "company" });
+Company.hasMany(TvaDeclaration, { foreignKey: "company_id", as: "tvaDeclarations" });
 
 // FiscalYear association
 Company.hasMany(FiscalYear, { foreignKey: "company_id", as: "fiscalYears" });
@@ -68,8 +71,8 @@ export {
   AccountingEntry,
   Payroll,
   Company,
-  TVAReport,
-  TVAItem,
+  TvaDeclaration as TVAReport,
+  TvaDeclarationLine as TVAItem,
   ChartOfAccounts,
   ThirdParty,
   Journal,

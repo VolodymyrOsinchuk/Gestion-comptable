@@ -19,6 +19,9 @@ import companyRoutes from "../routes/companyRoutes.js";
 import tvaRoutes from "../routes/tvaRoutes.js";
 import documentRoutes from "../routes/documentRoutes.js";
 import clotureRoutes from "../routes/clotureRoutes.js";
+import chartOfAccountsRoutes from "../routes/chartOfAccountsRoutes.js";
+import accountingRoutes from "../routes/accountingRoutes.js";
+import journalRoutes from "../routes/journalRoutes.js";
 
 const app = express();
 
@@ -40,6 +43,9 @@ app.use("/api/v1/companies", companyRoutes);
 app.use("/api/v1/tva", tvaRoutes);
 app.use("/api/v1/documents", documentRoutes);
 app.use("/api/v1/closing", clotureRoutes);
+app.use("/api/v1/chart-of-accounts", chartOfAccountsRoutes);
+app.use("/api/v1/accounting", accountingRoutes);
+app.use("/api/v1/journals", journalRoutes);
 // app.use("/api/documents", documentRoutes);
 // app.use("/api/bank", bankRoutes);
 // app.use("/api/declarations", declarationRoutes);
@@ -51,6 +57,12 @@ app.use("/api/v1/closing", clotureRoutes);
 const startDB = async () => {
   try {
     await sequelize.authenticate();
+    if (process.env.SEED === "true") {
+      await sequelize.sync({ force: true });
+      console.log("Tables recréées (force sync).");
+    } else {
+      await sequelize.sync();
+    }
     console.log("Connexion à la base de données réussie.");
   } catch (error) {
     console.error("Erreur de connexion à la base de données :", error);
@@ -63,11 +75,14 @@ if (process.env.NODE_ENV !== "production") {
   app.listen(PORT, () => {
     console.log(`Serveur démarré sur le port ${PORT}`);
   });
-  startDB();
-  if (process.env.SEED === "true") {
-    // Run seed only when explicitly requested to avoid duplicate inserts on nodemon restarts
-    seedDatabase();
-  }
+
+  (async () => {
+    await startDB();
+    if (process.env.SEED === "true") {
+      // Run seed only when explicitly requested to avoid duplicate inserts on nodemon restarts
+      await seedDatabase();
+    }
+  })();
 }
 
 export default app;

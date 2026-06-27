@@ -9,6 +9,14 @@ const Payroll = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
+    company_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "companies",
+        key: "id",
+      },
+    },
     period: {
       type: DataTypes.STRING(7),
       allowNull: false,
@@ -44,7 +52,11 @@ const Payroll = sequelize.define(
   },
   {
     tableName: "payrolls",
-    indexes: [{ fields: ["period"] }, { fields: ["status"] }],
+    indexes: [
+      { fields: ["company_id"] },
+      { fields: ["period"] },
+      { fields: ["status"] },
+    ],
   }
 );
 

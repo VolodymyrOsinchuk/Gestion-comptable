@@ -89,6 +89,16 @@ const ChartOfAccounts = sequelize.define(
       allowNull: true,
       comment: "Taux de TVA par défaut (ex: 20.00, 10.00, 5.50)",
     },
+    can_post: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+      comment: "Ce compte peut-il recevoir des écritures comptables ?",
+    },
+    usage_count: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      comment: "Nombre d'utilisations de ce compte dans les écritures",
+    },
     notes: {
       type: DataTypes.TEXT,
       allowNull: true,
